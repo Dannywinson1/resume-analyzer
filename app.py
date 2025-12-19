@@ -1,7 +1,7 @@
 import streamlit as st
-import spacy
+import subprocess
+import sys
 import fitz  # PyMuPDF
-from spacy.matcher import PhraseMatcher
 from openai import OpenAI
 import os
 
@@ -28,15 +28,19 @@ def get_openai_client():
 
 client = get_openai_client()
 
-# -----------------------------
-# Load spaCy model (cached)
-# -----------------------------
-
 @st.cache_resource
-def load_spacy():
-    return spacy.load("en_core_web_sm")
+def load_spacy_model():
+    model_name = "en_core_web_sm"
+    try:
+        return spacy.load(model_name)
+    except OSError:
+        # Model not found — download it
+        subprocess.check_call(
+            [sys.executable, "-m", "spacy", "download", model_name]
+        )
+        return spacy.load(model_name)
 
-nlp = load_spacy()
+nlp = load_spacy_model()
 
 # -----------------------------
 # UI
